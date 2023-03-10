@@ -4,7 +4,7 @@ d3 scatterplot-visualization -- solo project from freeCodeCamp data visualizatio
 This repo contains the second data-visualization from fCC data-visualization-course.
 It is a simple scatterplot built on my own from scratch using d3 according to user stories (see below). 
 
-Live demo available: 
+Live demo available: https://dazzling-croquembouche-fd0af4.netlify.app.
 
 
 Note: There is a testscript from freeCodeCamp included confirming fullfilling of user stories.
