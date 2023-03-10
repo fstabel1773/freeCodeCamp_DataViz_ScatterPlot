@@ -24,11 +24,11 @@ body {
     text-align: center;
     margin: 0 0.5em;
     box-shadow: 0 0 0.5em whitesmoke;
-    position: relative;
 }
 
 #title {
-    padding: 1em;
+    margin-top: 3em;
+    margin-bottom: 1em;
 }
 
 #title > h1 {
@@ -51,7 +51,6 @@ body {
 
 .dot {
     stroke: black;
-    /* outline: thin solid #161a1d; */
 }
 
 .dot:hover{
@@ -59,17 +58,15 @@ body {
     cursor: help;
 }
 
-
-
-/* .legendItem {
-    width: 12px;
-    height: 12px;
-} */
+#legend {
+    font-size: 0.75rem;
+}
 
 #tooltip {
     position: absolute;
+    font-size: 0.75rem;
+    line-height: 0.5rem;
     pointer-events: none;
-    background: #e5383b;
     color: #fff;	
     text-align: center;						
     padding: 0.5em;

@@ -11,7 +11,7 @@ fetch(url)
     return res.json();
   })
   .then((data) => {
-    // compute windwoWidth
+    // compute windwoWidth (needed for positioning of tooltip)
     let windowWidth = document.querySelector("body").clientWidth;
     let windowHeight = document.querySelector("body").clientHeight;
     window.addEventListener("resize", () => {
@@ -23,7 +23,6 @@ fetch(url)
     const w = 1000;
     const h = 700;
     const padding = 70;
-    const barwidth = (w - 2 * padding) / data.length;
     const specifier = "%M:%S";
 
     //svg container
@@ -39,7 +38,7 @@ fetch(url)
     const svg = container.append("svg").attr("width", w).attr("height", h);
 
     // scales
-    //nb: -1/+1 in domain creates little overlapping space on axis
+    // nb: -1/+1 in domain creates little overlapping space on axis
     const xScale = d3
       .scaleTime()
       .domain([
@@ -83,16 +82,14 @@ fetch(url)
       .append("text")
       .attr("class", "yLabel")
       .attr("text-anchor", "end")
-      .attr("y", 10)
-      .attr("dy", ".75em")
+      .attr("y", 20)
       .attr("x", -250)
       .text("Time in Minutes");
 
     // legend
     const legendItemSize = 25;
-    const legendSpacing = 5;
-    const xOffset = w - padding;
-    const yOffset = 0;
+    const legendSpacing = 10;
+    const yOffset = 75;
     const legend = svg
       .append("g")
       .attr("id", "legend")
@@ -111,7 +108,7 @@ fetch(url)
         return d === 1 ? "#ef476f" : "#06d6a0";
       })
       .attr("transform", (d, i) => {
-        const x = xOffset;
+        const x = w - padding;
         const y = yOffset + (legendItemSize + legendSpacing) * i;
         return `translate(${x}, ${y})`;
       });
@@ -119,18 +116,48 @@ fetch(url)
     legend
       .enter()
       .append("text")
-      .attr("x", xOffset - legendSpacing)
+      .attr("x", w - padding - legendSpacing)
       .attr(
         "y",
         (d, i) =>
-          yOffset +
-          (legendItemSize + legendSpacing) / 2 +
-          (legendItemSize + legendSpacing) * i
+          yOffset + legendItemSize / 2 + (legendItemSize + legendSpacing) * i
       )
       .style("alignment-baseline", "middle")
       .text((d) =>
         d === 1 ? "Riders with doping allegations" : "No doping allegations"
       );
+
+    // tooltip
+    const tooltip = d3
+      .select("body")
+      .append("g")
+      .attr("id", "tooltip")
+      .style("opacity", 0);
+
+    const mouseenter = (event, d) => {
+      tooltip.style("opacity", 0.9);
+    };
+
+    const mouseleave = (event, d) => {
+      tooltip.transition().duration(500).style("opacity", 0);
+    };
+
+    const mousemove = (event, d) => {
+      const [a, b] = d3.pointer(event);
+
+      tooltip.transition().duration(200).style("opacity", 0.9);
+      tooltip
+        .html(
+          `<p>${d.Name} (${d.Nationality})</p>
+              <p>Year: ${d.Year}, Time: ${d.Time}</p>
+              <br>
+              <p>${d.Doping}</p>`
+        )
+        .attr("data-year", new Date(`${d.Year}-01-01`))
+        .style("left", (windowWidth - w) / 2 + a + 20 + "px")
+        .style("top", (windowHeight - h) / 2 + b - 100 + "px")
+        .style("background-color", d.Doping ? "#ef476f" : "#06d6a0");
+    };
 
     // circles
     svg
@@ -146,41 +173,10 @@ fetch(url)
       })
       .attr("class", "dot")
       .attr("data-xvalue", (d) => new Date(`${d.Year}-01-01`))
-      .attr("data-yvalue", (d) => d3.timeParse(specifier)(d.Time));
-
-    // .on("mousemove", mousemove)
-    // .on("mouseleave", mouseleave)
-    // .on("mouseenter", mouseenter);
-
-    // // tooltip
-    // const tooltip = d3
-    //   .select("body")
-    //   .append("g")
-    //   .attr("id", "tooltip")
-    //   .style("opacity", 0);
-
-    // const mouseenter = (event, d) => {
-    //   tooltip.style("opacity", 1);
-    // };
-
-    // const mouseleave = (event, d) => {
-    //   tooltip.transition().duration(500).style("opacity", 0);
-    // };
-
-    // const mousemove = (event, d) => {
-    //   const [a, b] = d3.pointer(event);
-    //   const dataDate = new Date(d[0]);
-    //   const year = dataDate.getFullYear();
-    //   const quarter = Math.floor((dataDate.getMonth() + 3) / 3);
-    //   const gdp = `$ ${d[1]} Billion`;
-
-    //   tooltip.transition().duration(200).style("opacity", 0.9);
-    //   tooltip
-    //     .html(`<p>${year} Q${quarter}</p><h2>${gdp}</h2>`)
-    //     .attr("data-date", d[0])
-    //     .style("left", (windowWidth - w) / 2 + a + 20 + "px")
-    //     .style("top", (windowHeight - h) / 2 + b - 100 + "px");
-    // };
+      .attr("data-yvalue", (d) => d3.timeParse(specifier)(d.Time))
+      .on("mousemove", mousemove)
+      .on("mouseleave", mouseleave)
+      .on("mouseenter", mouseenter);
   })
   .catch((error) =>
     console.log("Not able to fetch the data. There was an error: ", error)
