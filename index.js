@@ -24,6 +24,7 @@ fetch(url)
     const h = 700;
     const padding = 70;
     const barwidth = (w - 2 * padding) / data.length;
+    const specifier = "%M:%S";
 
     //svg container
     const container = d3.select("body").append("div").attr("id", "container");
@@ -51,18 +52,15 @@ fetch(url)
       ])
       .range([padding, w - padding]);
 
-    const specifier = "%M:%S";
-    const parsedTime = data.map((d) => {
-      return d3.timeParse(specifier)(d.Time);
-    });
-    console.log(parsedTime);
-
     const yScale = d3
       .scaleTime()
-      .domain([d3.max(parsedTime), d3.min(parsedTime)])
+      .domain([
+        d3.max(data, (d) => d3.timeParse(specifier)(d.Time)),
+        d3.min(data, (d) => d3.timeParse(specifier)(d.Time)),
+      ])
       .range([h - padding, padding]);
 
-    // // axis
+    // axis
     const xAxis = d3.axisBottom(xScale);
     const yAxis = d3
       .axisLeft(yScale)
@@ -80,6 +78,7 @@ fetch(url)
       .attr("id", "y-axis")
       .call(yAxis);
 
+    // axis-label
     svg
       .append("text")
       .attr("class", "yLabel")
@@ -88,6 +87,70 @@ fetch(url)
       .attr("dy", ".75em")
       .attr("x", -250)
       .text("Time in Minutes");
+
+    // legend
+    const legendItemSize = 25;
+    const legendSpacing = 5;
+    const xOffset = w - padding;
+    const yOffset = 0;
+    const legend = svg
+      .append("g")
+      .attr("id", "legend")
+      .attr("text-anchor", "end")
+      .selectAll(".legendItem")
+      .data([0, 1]);
+
+    legend
+      .enter()
+      .append("rect")
+      .attr("class", "legendItem")
+      .attr("width", legendItemSize)
+      .attr("height", legendItemSize)
+
+      .style("fill", (d) => {
+        return d === 1 ? "#ef476f" : "#06d6a0";
+      })
+      .attr("transform", (d, i) => {
+        const x = xOffset;
+        const y = yOffset + (legendItemSize + legendSpacing) * i;
+        return `translate(${x}, ${y})`;
+      });
+
+    legend
+      .enter()
+      .append("text")
+      .attr("x", xOffset - legendSpacing)
+      .attr(
+        "y",
+        (d, i) =>
+          yOffset +
+          (legendItemSize + legendSpacing) / 2 +
+          (legendItemSize + legendSpacing) * i
+      )
+      .style("alignment-baseline", "middle")
+      .text((d) =>
+        d === 1 ? "Riders with doping allegations" : "No doping allegations"
+      );
+
+    // circles
+    svg
+      .selectAll("circle")
+      .data(data)
+      .enter()
+      .append("circle")
+      .attr("cx", (d) => xScale(new Date(`${d.Year}-01-01`)))
+      .attr("cy", (d) => yScale(d3.timeParse(specifier)(d.Time)))
+      .attr("r", 10)
+      .attr("fill", (d) => {
+        return d.Doping ? "#ef476f" : "#06d6a0";
+      })
+      .attr("class", "dot")
+      .attr("data-xvalue", (d) => new Date(`${d.Year}-01-01`))
+      .attr("data-yvalue", (d) => d3.timeParse(specifier)(d.Time));
+
+    // .on("mousemove", mousemove)
+    // .on("mouseleave", mouseleave)
+    // .on("mouseenter", mouseenter);
 
     // // tooltip
     // const tooltip = d3
@@ -118,25 +181,6 @@ fetch(url)
     //     .style("left", (windowWidth - w) / 2 + a + 20 + "px")
     //     .style("top", (windowHeight - h) / 2 + b - 100 + "px");
     // };
-
-    // // bars
-    // svg
-    //   .selectAll("rect")
-    //   .data(data)
-    //   .enter()
-    //   .append("rect")
-    //   // .attr("x", (d, i) => padding + i * barwidth)
-    //   .attr("x", (d, i) => xScale(new Date(d[0])))
-    //   .attr("y", (d, i) => yScale(d[1]))
-    //   .attr("width", barwidth)
-    //   .attr("height", (d, i) => h - padding - yScale(d[1]))
-    //   .attr("fill", "#a4161a")
-    //   .attr("class", "bar")
-    //   .attr("data-date", (d, i) => d[0])
-    //   .attr("data-gdp", (d, i) => d[1])
-    //   .on("mousemove", mousemove)
-    //   .on("mouseleave", mouseleave)
-    //   .on("mouseenter", mouseenter);
   })
   .catch((error) =>
     console.log("Not able to fetch the data. There was an error: ", error)

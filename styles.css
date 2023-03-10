@@ -43,18 +43,27 @@ body {
     margin-top: 0.5rem;
 }
 
-svg {
-    border: 1px solid black;
-}
-
 
 .yLabel {
     font-size: 0.75rem;
     transform: rotate(-90deg);
 }
 
-/* .bar:hover{
-    fill: #161a1d;
+.dot {
+    stroke: black;
+    /* outline: thin solid #161a1d; */
+}
+
+.dot:hover{
+    fill: #073b4c;
+    cursor: help;
+}
+
+
+
+/* .legendItem {
+    width: 12px;
+    height: 12px;
 } */
 
 #tooltip {
